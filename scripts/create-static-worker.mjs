@@ -9,18 +9,28 @@ indexHtml = await inlineBuiltAssets(indexHtml);
 
 async function inlineBuiltAssets(html) {
   let output = html;
+  const basePath = process.env.VITE_BASE_PATH ?? "/";
+
+  function assetPath(url) {
+    let clean = url.replace(/^\//, "");
+    const cleanBase = basePath.replace(/^\/|\/$/g, "");
+    if (cleanBase && clean.startsWith(`${cleanBase}/`)) {
+      clean = clean.slice(cleanBase.length + 1);
+    }
+    return clean;
+  }
 
   const stylesheetMatches = [...output.matchAll(/<link rel="stylesheet" crossorigin href="([^"]+)">/g)];
   for (const match of stylesheetMatches) {
     const href = match[1];
-    const css = await readFile(join(clientDir, href.replace(/^\//, "")), "utf8");
+    const css = await readFile(join(clientDir, assetPath(href)), "utf8");
     output = output.replace(match[0], `<style>${css}</style>`);
   }
 
   const scriptMatches = [...output.matchAll(/<script type="module" crossorigin src="([^"]+)"><\/script>/g)];
   for (const match of scriptMatches) {
     const src = match[1];
-    const js = await readFile(join(clientDir, src.replace(/^\//, "")), "utf8");
+    const js = await readFile(join(clientDir, assetPath(src)), "utf8");
     output = output.replace(match[0], `<script type="module">${js}</script>`);
   }
 
