@@ -10,7 +10,9 @@ try {
   Remove-Item Env:VITE_BASE_PATH -ErrorAction SilentlyContinue
 
   New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
-  Copy-Item -LiteralPath (Join-Path $repoRoot "dist\client\*") -Destination $publishDir -Recurse -Force
+  Get-ChildItem -LiteralPath (Join-Path $repoRoot "dist\client") -Force | ForEach-Object {
+    Copy-Item -LiteralPath $_.FullName -Destination $publishDir -Recurse -Force
+  }
   New-Item -ItemType File -Path (Join-Path $publishDir ".nojekyll") -Force | Out-Null
   Copy-Item -LiteralPath (Join-Path $publishDir "index.html") -Destination (Join-Path $publishDir "404.html") -Force
 
