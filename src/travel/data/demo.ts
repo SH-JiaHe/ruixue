@@ -10,7 +10,8 @@ type ImportedCity = {
   photoCount: number;
 };
 
-const MEDIA_BASE = "https://cdn.jsdelivr.net/gh/SH-JiaHe/ruixue@main/public/travel-media";
+const SITE_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const MEDIA_BASE = `${SITE_BASE}/travel-media`;
 
 const importedCities: ImportedCity[] = [
   { countryId: "CHN", countryName: "中国", cityName: "上海", cityNameEn: "Shanghai", countrySlug: "china", citySlug: "shanghai", photoCount: 3 },
