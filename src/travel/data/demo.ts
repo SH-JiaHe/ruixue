@@ -10,6 +10,8 @@ type ImportedCity = {
   photoCount: number;
 };
 
+const MEDIA_BASE = "https://cdn.jsdelivr.net/gh/SH-JiaHe/ruixue@main/public/travel-media";
+
 const importedCities: ImportedCity[] = [
   { countryId: "CHN", countryName: "中国", cityName: "上海", cityNameEn: "Shanghai", countrySlug: "china", citySlug: "shanghai", photoCount: 3 },
   { countryId: "CHN", countryName: "中国", cityName: "北京", cityNameEn: "Beijing", countrySlug: "china", citySlug: "beijing", photoCount: 9 },
@@ -36,7 +38,7 @@ const importedCities: ImportedCity[] = [
 function photoSet(countrySlug: string, citySlug: string, count: number) {
   return Array.from(
     { length: count },
-    (_, index) => `/travel-media/${countrySlug}/${citySlug}/${String(index + 1).padStart(2, "0")}.jpg`,
+    (_, index) => `${MEDIA_BASE}/${countrySlug}/${citySlug}/${String(index + 1).padStart(2, "0")}.jpg`,
   );
 }
 
@@ -83,7 +85,7 @@ export const emptyData: TravelAppData = {
   version: 1,
   profile: {
     nickname: "世界旅行者",
-    avatar: "/travel-media/avatar.jpg",
+    avatar: `${MEDIA_BASE}/avatar.jpg`,
     tagline: "把每一次抵达，写成自己的经纬线",
     homeCity: "上海",
     favoriteCountry: "日本",

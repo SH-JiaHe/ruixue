@@ -2,7 +2,30 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 const workerPath = join(process.cwd(), "dist", "server", "index.js");
-const indexHtml = await readFile(join(process.cwd(), "dist", "client", "index.html"), "utf8");
+const clientDir = join(process.cwd(), "dist", "client");
+let indexHtml = await readFile(join(clientDir, "index.html"), "utf8");
+
+indexHtml = await inlineBuiltAssets(indexHtml);
+
+async function inlineBuiltAssets(html) {
+  let output = html;
+
+  const stylesheetMatches = [...output.matchAll(/<link rel="stylesheet" crossorigin href="([^"]+)">/g)];
+  for (const match of stylesheetMatches) {
+    const href = match[1];
+    const css = await readFile(join(clientDir, href.replace(/^\//, "")), "utf8");
+    output = output.replace(match[0], `<style>${css}</style>`);
+  }
+
+  const scriptMatches = [...output.matchAll(/<script type="module" crossorigin src="([^"]+)"><\/script>/g)];
+  for (const match of scriptMatches) {
+    const src = match[1];
+    const js = await readFile(join(clientDir, src.replace(/^\//, "")), "utf8");
+    output = output.replace(match[0], `<script type="module">${js}</script>`);
+  }
+
+  return output;
+}
 
 const workerSource = `const INDEX_HTML = ${JSON.stringify(indexHtml)};
 
