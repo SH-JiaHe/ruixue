@@ -1,9 +1,12 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 const workerPath = join(process.cwd(), "dist", "server", "index.js");
+const indexHtml = await readFile(join(process.cwd(), "dist", "index.html"), "utf8");
 
-const workerSource = `const TEXT_TYPES = new Map([
+const workerSource = `const INDEX_HTML = ${JSON.stringify(indexHtml)};
+
+const TEXT_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
   [".js", "text/javascript; charset=utf-8"],
   [".css", "text/css; charset=utf-8"],
@@ -31,6 +34,18 @@ function withContentType(response, pathname) {
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
+async function fetchAsset(request, env, pathname) {
+  const candidates = [pathname];
+  if (!pathname.startsWith("/dist/")) candidates.push(\`/dist\${pathname}\`);
+
+  for (const candidate of candidates) {
+    const response = await env.ASSETS.fetch(assetRequest(request, candidate));
+    if (response.status !== 404) return withContentType(response, candidate);
+  }
+
+  return null;
+}
+
 export default {
   async fetch(request, env) {
     if (request.method !== "GET" && request.method !== "HEAD") {
@@ -39,17 +54,21 @@ export default {
 
     const url = new URL(request.url);
     const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
-    const assetResponse = await env.ASSETS.fetch(assetRequest(request, pathname));
-
-    if (assetResponse.status !== 404) {
-      return withContentType(assetResponse, pathname);
-    }
+    const assetResponse = await fetchAsset(request, env, pathname);
+    if (assetResponse) return assetResponse;
 
     if (!pathname.includes(".")) {
-      return withContentType(await env.ASSETS.fetch(assetRequest(request, "/index.html")), "/index.html");
+      const fallback = await fetchAsset(request, env, "/index.html");
+      if (fallback) return fallback;
     }
 
-    return assetResponse;
+    if (pathname === "/index.html" || !pathname.includes(".")) {
+      return new Response(INDEX_HTML, {
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
+
+    return new Response("Not found", { status: 404 });
   },
 };
 `;
