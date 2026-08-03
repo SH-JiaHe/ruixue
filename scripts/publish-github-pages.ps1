@@ -7,6 +7,7 @@ Push-Location $repoRoot
 try {
   $env:VITE_BASE_PATH = "/ruixue/"
   npm run build
+  if ($LASTEXITCODE -ne 0) { throw "Build failed." }
   Remove-Item Env:VITE_BASE_PATH -ErrorAction SilentlyContinue
 
   New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
@@ -19,12 +20,19 @@ try {
   Push-Location $publishDir
   try {
     git init -b gh-pages
+    if ($LASTEXITCODE -ne 0) { throw "git init failed." }
     git config user.name "Codex"
+    if ($LASTEXITCODE -ne 0) { throw "git config user.name failed." }
     git config user.email "codex@openai.local"
+    if ($LASTEXITCODE -ne 0) { throw "git config user.email failed." }
     git add .
+    if ($LASTEXITCODE -ne 0) { throw "git add failed." }
     git commit -m "Deploy GitHub Pages"
+    if ($LASTEXITCODE -ne 0) { throw "git commit failed." }
     git remote add origin "https://github.com/SH-JiaHe/ruixue.git"
+    if ($LASTEXITCODE -ne 0) { throw "git remote add failed." }
     git push -f origin gh-pages
+    if ($LASTEXITCODE -ne 0) { throw "git push failed." }
   } finally {
     Pop-Location
   }
