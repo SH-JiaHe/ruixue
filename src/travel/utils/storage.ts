@@ -1,7 +1,7 @@
 import { initialTravelData } from "../data/demo";
 import type { TravelAppData } from "../types";
 
-const STORAGE_KEY = "my-world-footprints:v2";
+const STORAGE_KEY = "my-world-footprints:v3";
 
 export function loadTravelData(): TravelAppData {
   try {
