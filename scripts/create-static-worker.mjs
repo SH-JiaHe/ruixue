@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 const workerPath = join(process.cwd(), "dist", "server", "index.js");
-const indexHtml = await readFile(join(process.cwd(), "dist", "index.html"), "utf8");
+const indexHtml = await readFile(join(process.cwd(), "dist", "client", "index.html"), "utf8");
 
 const workerSource = `const INDEX_HTML = ${JSON.stringify(indexHtml)};
 
@@ -37,6 +37,8 @@ function withContentType(response, pathname) {
 async function fetchAsset(request, env, pathname) {
   const candidates = [pathname];
   if (!pathname.startsWith("/dist/")) candidates.push(\`/dist\${pathname}\`);
+  if (!pathname.startsWith("/client/")) candidates.push(\`/client\${pathname}\`);
+  if (!pathname.startsWith("/dist/client/")) candidates.push(\`/dist/client\${pathname}\`);
 
   for (const candidate of candidates) {
     const response = await env.ASSETS.fetch(assetRequest(request, candidate));
