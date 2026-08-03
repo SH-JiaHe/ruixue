@@ -9,7 +9,7 @@ export function loadTravelData(): TravelAppData {
     if (!raw) return initialTravelData;
     const parsed = JSON.parse(raw) as TravelAppData;
     if (parsed?.version !== 1 || !parsed.profile || !parsed.countryStates) return initialTravelData;
-    return parsed;
+    return normalizeTravelMediaPaths(parsed);
   } catch {
     return initialTravelData;
   }
@@ -40,4 +40,30 @@ export function validateImport(input: unknown): input is TravelAppData {
       Array.isArray(candidate.plans) &&
       candidate.settings,
   );
+}
+
+function normalizeTravelMediaPaths(data: TravelAppData): TravelAppData {
+  const siteBase = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const mediaBase = `${siteBase}/travel-media`;
+  const legacyCdnPattern = /^https:\/\/cdn\.jsdelivr\.net\/gh\/SH-JiaHe\/ruixue@main\/public\/travel-media/;
+
+  function normalizeUrl(url?: string) {
+    if (!url) return url;
+    if (legacyCdnPattern.test(url)) return url.replace(legacyCdnPattern, mediaBase);
+    if (url.startsWith("/travel-media")) return `${siteBase}${url}`;
+    return url;
+  }
+
+  return {
+    ...data,
+    profile: {
+      ...data.profile,
+      avatar: normalizeUrl(data.profile.avatar),
+    },
+    records: data.records.map((record) => ({
+      ...record,
+      photo: normalizeUrl(record.photo),
+      photos: record.photos?.map((photo) => normalizeUrl(photo) ?? photo),
+    })),
+  };
 }
