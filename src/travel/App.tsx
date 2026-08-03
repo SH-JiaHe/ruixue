@@ -18,6 +18,8 @@ export default function App() {
   const [data, setData] = useState<TravelAppData>(() => loadTravelData());
   const [activeTab, setActiveTab] = useState<TabKey>("world");
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [memoryCountryId, setMemoryCountryId] = useState<string | null>(null);
+  const [addRecordSignal, setAddRecordSignal] = useState(0);
   const [toast, setToast] = useState("");
   const [pendingDelete, setPendingDelete] = useState<TravelRecord | "all" | "states" | null>(null);
   const hasIntro = data.hasSeenIntro;
@@ -42,6 +44,30 @@ export default function App() {
 
   function showToast(message: string) {
     setToast(message);
+  }
+
+  function openNewRecord(country?: Country) {
+    const targetCountry =
+      country ??
+      (memoryCountryId ? countriesById[memoryCountryId] : undefined) ??
+      (data.records[0] ? countriesById[data.records[0].countryId] : undefined) ??
+      countriesById["CHN"];
+
+    if (!targetCountry) return;
+    setSelectedCountry(targetCountry);
+    setAddRecordSignal((signal) => signal + 1);
+  }
+
+  function handleMapCountrySelect(country: Country) {
+    const status = data.countryStates[country.id]?.status;
+    if (status === "visited") {
+      setSelectedCountry(null);
+      setMemoryCountryId(country.id);
+      setActiveTab("memories");
+      showToast(`${country.nameZh}的回忆手账已打开`);
+      return;
+    }
+    setSelectedCountry(country);
   }
 
   function setCountryStatus(countryId: string, status: CountryStatus) {
@@ -137,14 +163,23 @@ export default function App() {
         <WorldPage
           data={data}
           selectedCountryId={selectedCountry?.id}
-          onSelectCountry={setSelectedCountry}
+          onSelectCountry={handleMapCountrySelect}
           onSetStatus={setCountryStatus}
           onClearStates={() => setPendingDelete("states")}
         />
       );
     }
     if (activeTab === "memories") {
-      return <MemoriesPage data={data} onOpenCountry={setSelectedCountry} onDeleteRecord={(record) => setPendingDelete(record)} />;
+      return (
+        <MemoriesPage
+          data={data}
+          selectedCountryId={memoryCountryId}
+          onClearCountryFilter={() => setMemoryCountryId(null)}
+          onAddRecord={() => openNewRecord()}
+          onOpenCountry={setSelectedCountry}
+          onDeleteRecord={(record) => setPendingDelete(record)}
+        />
+      );
     }
     if (activeTab === "routes") {
       return (
@@ -216,6 +251,7 @@ export default function App() {
         onImpressionChange={setImpression}
         onSaveRecord={saveRecord}
         onDeleteRecord={(record) => setPendingDelete(record)}
+        addRecordSignal={addRecordSignal}
       />
 
       {pendingDelete && (

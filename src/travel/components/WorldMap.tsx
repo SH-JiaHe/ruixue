@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import { ComposableMap, Geographies, Geography, Graticule, Line, Marker, ZoomableGroup } from "react-simple-maps";
 import worldMap from "world-atlas/countries-110m.json";
 import { RotateCcw } from "lucide-react";
@@ -43,6 +43,7 @@ function WorldMapComponent({ countryStates, records, selectedCountryId, routeVis
     zoom: 1,
   });
   const [hovered, setHovered] = useState<Country | null>(null);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
 
   const routePoints = useMemo(() => {
     return records
@@ -99,7 +100,18 @@ function WorldMapComponent({ countryStates, records, selectedCountryId, routeVis
                       geography={geo}
                       className={`map-country ${statusClass[status]} ${selected ? "selected" : ""}`}
                       tabIndex={country ? 0 : -1}
-                      onClick={() => country && onCountrySelect(country)}
+                      onPointerDown={(event) => {
+                        pointerStart.current = { x: event.clientX, y: event.clientY };
+                      }}
+                      onPointerUp={(event) => {
+                        if (!country || !pointerStart.current) return;
+                        const moved = Math.hypot(
+                          event.clientX - pointerStart.current.x,
+                          event.clientY - pointerStart.current.y,
+                        );
+                        pointerStart.current = null;
+                        if (moved <= 6) onCountrySelect(country);
+                      }}
                       onMouseEnter={() => country && setHovered(country)}
                       onMouseLeave={() => setHovered(null)}
                       onKeyDown={(event) => {

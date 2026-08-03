@@ -14,6 +14,7 @@ type CountryDrawerProps = {
   onImpressionChange: (countryId: string, impression: string) => void;
   onSaveRecord: (record: TravelRecord) => void;
   onDeleteRecord: (record: TravelRecord) => void;
+  addRecordSignal?: number;
 };
 
 const emptyRecord = (countryId: string): TravelRecord => ({
@@ -44,6 +45,7 @@ export function CountryDrawer({
   onImpressionChange,
   onSaveRecord,
   onDeleteRecord,
+  addRecordSignal,
 }: CountryDrawerProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<TravelRecord | null>(null);
@@ -58,6 +60,13 @@ export function CountryDrawer({
       setImpression(state?.impression ?? "");
     }
   }, [country, state?.impression]);
+
+  useEffect(() => {
+    if (!country || !addRecordSignal) return;
+    setForm(emptyRecord(country.id));
+    setFormOpen(true);
+    setError("");
+  }, [addRecordSignal, country]);
 
   const countryRecords = useMemo(
     () => (country ? records.filter((record) => record.countryId === country.id) : []),

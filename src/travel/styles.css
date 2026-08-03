@@ -387,6 +387,7 @@ select:focus-visible {
 .map-country {
   stroke: rgba(244, 241, 229, 0.46);
   stroke-width: 0.45;
+  cursor: pointer;
   transition: fill 0.18s ease, opacity 0.18s ease, stroke-width 0.18s ease;
 }
 
@@ -619,6 +620,13 @@ select:focus-visible {
 
 .page-head {
   padding: 6px 2px;
+}
+
+.memory-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .memory-list {
